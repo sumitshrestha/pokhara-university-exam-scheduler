@@ -2,14 +2,18 @@
 build/
 dist/
 
+# Gradle
+.gradle/
+
 # NetBeans private project settings
 nbproject/private/
 
 # Compiled classes
 **/*.class
 
-# JAR artifacts
+# JAR artifacts (but keep the Gradle wrapper bootstrap JAR)
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 # Log files
 wget-log*

@@ -692,9 +692,9 @@ public class ExamDataTree extends javax.swing.JTree{
                 while( prgItr.hasNext() ){
                     this.Writer.removeProgram( prgItr.next().getProgramName(), fac, level, discp);
                 }
-                java.util.Enumeration<DefaultMutableTreeNode> prgNodes = node.children();
+                java.util.Enumeration<TreeNode> prgNodes = node.children();
                 while( prgNodes.hasMoreElements() ){
-                    DefaultMutableTreeNode prgNode = prgNodes.nextElement();
+                    DefaultMutableTreeNode prgNode = (DefaultMutableTreeNode) prgNodes.nextElement();
                     this.Model.removeNodeFromParent( prgNode );
                 }
                 this.addProgramsToDatabase(form);

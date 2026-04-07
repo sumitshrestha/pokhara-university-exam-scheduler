@@ -120,7 +120,7 @@ public class RoutineGenerateServer extends java.rmi.server.UnicastRemoteObject
     }
     
     public static String getClientHost() throws ServerNotActiveException {        
-        return sun.rmi.transport.tcp.TCPTransport.getClientHost();
+        return java.rmi.server.RemoteServer.getClientHost();
     }
 
     private String getRegistrationNumber() {
