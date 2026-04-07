@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.domain.CourseCode;
 import puexamroutine.control.domain.interfaces.DependentCourses;
 import puexamroutine.control.routinegeneration.graph.domain.KeyedGraph;
@@ -14,6 +16,8 @@ import puexamroutine.control.routinegeneration.graph.domain.KeyedGraph;
  * @author Sumit Shresth
  */
 public class ExamGraphFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExamGraphFactory.class);
     
     private boolean DEBUG = false;
     
@@ -78,7 +82,7 @@ public class ExamGraphFactory {
         puexamroutine.control.routinegeneration.graph.domain.KeyedGraph Graph = new puexamroutine.control.routinegeneration.graph.domain.KeyedGraph(RegCourseList.size());
         String[] Courses = getCourseArray(RegCourseList);
         if(this.DEBUG)this.print(Courses);
-        if(this.DEBUG)System.out.println("The size of graph is "+Courses.length );
+        if(this.DEBUG)LOGGER.debug("The size of graph is {}", Courses.length);
         Graph.setKeys(Courses);        
         return Graph;
     }
@@ -142,27 +146,28 @@ public class ExamGraphFactory {
     
     
     private void print( String[] c ){
-        System.out.println("\n");
+        StringBuilder sb = new StringBuilder();
         for( int i=0; i<c.length; i++ ){
-            System.out.print( " "+(i+1)+"th" + c[i] );
+            sb.append(" ").append(i + 1).append("th").append(c[i]);
         }
-        System.out.println("\n");
+        LOGGER.debug("{}", sb);
     }
     
     private void print( DependentCourses dep ){
         try{
         java.util.Iterator<CourseCode> c = dep.getDependentCourses().iterator();
-        System.out.println();
+        StringBuilder sb = new StringBuilder();
         while(c.hasNext()){
             CourseCode ct = c.next();
             if(ct == null)
-            System.out.print( " ct is null in printing dep..." );
+                sb.append(" ct is null in printing dep...");
             else
-                System.out.print(ct.toString()+" ,");
+                sb.append(ct.toString()).append(" ,");
         }
+        LOGGER.debug("{}", sb);
         }
         catch( Exception e ){
-            System.out.println("\nerror while printing dep..");
+            LOGGER.error("error while printing dep..", e);
         }
     }
         

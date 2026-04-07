@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.lang.*;
 import java.util.HashSet;
@@ -23,6 +25,8 @@ import puexamroutine.control.routinegeneration.graph.domain.GraphColoringSolutio
  * @author Sumit Shresth
  */
 public final class IndependentCourseCreator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndependentCourseCreator.class);
     
     /**
      * This method creates one independent courses object from the specified Courses
@@ -38,7 +42,7 @@ public final class IndependentCourseCreator {
         IndependentCourses SameColorCourseCodes = new IndependentCourses();
         while (SameColorCoursesItr.hasNext()) {
             int ColorIndex = SameColorCoursesItr.next();            
-            if(DEBUG)System.out.print(Courses[ColorIndex].toString()+", " );
+            if(DEBUG)LOGGER.debug("{}", Courses[ColorIndex].toString());
             SameColorCourseCodes.addIndepentRegularCourse( Courses[ColorIndex] );
         }
         return SameColorCourseCodes;
@@ -50,7 +54,7 @@ public final class IndependentCourseCreator {
         Iterator<Integer> ColorItr = ColoredCoursesIndex.keySet().iterator();
         while( ColorItr.hasNext() ){            
             int c = ColorItr.next();                     
-            if(DEBUG) System.out.println("\nfor color "+c);
+            if(DEBUG) LOGGER.debug("for color {}", c);
             ColoredCoursesList.addIndependentCourse( c,createSameColoredCourseCodeList( c, ColoredCoursesIndex, Courses ,DEBUG )  );
         }
     }

@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.domain.list.UniversityDataBean;
 import puexamroutine.control.schedule.Result;
 import puexamroutine.control.interfaces.*;
@@ -21,6 +23,8 @@ import java.text.SimpleDateFormat;
  */
 public class RoutineGenerateServer extends java.rmi.server.UnicastRemoteObject
                                    implements RoutineGenerateServerInterface {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoutineGenerateServer.class);
     
     public RoutineGenerateServer( int port ) throws RemoteException {    
         final String thisHost;
@@ -71,7 +75,7 @@ public class RoutineGenerateServer extends java.rmi.server.UnicastRemoteObject
             }
         }
         catch( Exception e ){
-            System.out.println("exception while getting client "+e.getMessage() );
+            LOGGER.error("Exception while generating routine for client {}", ClientID, e);
             return new Result(false, null, null, null,"scheduling could not be performed due to " + e.getMessage()  );
         }
     }
@@ -82,7 +86,7 @@ public class RoutineGenerateServer extends java.rmi.server.UnicastRemoteObject
             this.ClientRequestList.get( ClientID ).cancelRequest();
         }
         catch( Exception e ){
-            System.out.println("exception while cancelling "+e.getMessage() );
+            LOGGER.error("Exception while cancelling routine for client {}", ClientID, e);
         }
     }
     
@@ -104,7 +108,7 @@ public class RoutineGenerateServer extends java.rmi.server.UnicastRemoteObject
     }
 
     private void displayMessage(final String Message ) {
-        System.out.println( this.now()+'\t' + Message);
+        LOGGER.info("{}\t{}", this.now(), Message);
     }
     
     private RemoteShedulerListener getDummyRemoteShedulerListener(){

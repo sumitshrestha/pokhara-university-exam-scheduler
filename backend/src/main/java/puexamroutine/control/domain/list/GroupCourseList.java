@@ -30,6 +30,8 @@ public class GroupCourseList implements java.io.Serializable{
     }
     
     public void addCourses( final String[] c ){
+        if( c == null )
+            return;
         for( int i=0; i<c.length; i++ )
             this.addCourse( c[i] );
     }
@@ -39,6 +41,8 @@ public class GroupCourseList implements java.io.Serializable{
     }
     
     public void addRegularCourses( final String[] C ){
+        if( C == null )
+            return;
         for( int i=0; i<C.length; i++ )
             this.addRegularCourse( C[i] );
     }
@@ -60,6 +64,8 @@ public class GroupCourseList implements java.io.Serializable{
     }
     
     public void addBackCourses( final String[] c ){
+        if( c == null )
+            return;
         for( int i=0; i<c.length; i++ )
             this.addBackCourse( c[i] );
     }

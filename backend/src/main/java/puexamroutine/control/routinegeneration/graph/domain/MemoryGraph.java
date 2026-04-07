@@ -3,11 +3,16 @@
 
 package puexamroutine.control.routinegeneration.graph.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  * @author Sumit Shresth
  */
 public class MemoryGraph implements puexamroutine.control.routinegeneration.graph.domain.interfaces.AdjacancyMatrix{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryGraph.class);
     
     public MemoryGraph( int size ){
         try{
@@ -20,7 +25,7 @@ public class MemoryGraph implements puexamroutine.control.routinegeneration.grap
         }
         }
         catch( Exception e){
-            System.out.println("error in memory graph initialize "+ e.getMessage() );
+            LOGGER.error("error in memory graph initialize", e);
         }
     }
             
@@ -59,12 +64,13 @@ public class MemoryGraph implements puexamroutine.control.routinegeneration.grap
     }
     
     public void report(){
-        System.out.println("The size of graph was " + getSize()+"*"+getSize()+ "\nthis is the degree::"+this.getDegree()+"\nThis is the graph");
+        LOGGER.info("The size of graph was {}*{} this is the degree::{} This is the graph", getSize(), getSize(), this.getDegree());
         for( int i=1;i<=getSize(); i++){            
+            StringBuilder row = new StringBuilder();
             for( int j=1;j<=getSize();j++){
-                System.out.print(" " + (get(i, j)?1:0) );
+                row.append(" ").append(get(i, j)?1:0);
             }
-            System.out.print("\n");
+            LOGGER.info("{}", row);
         }
     }
     

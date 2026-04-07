@@ -3,6 +3,8 @@
 
 package puexamroutine.control.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.domain.interfaces.CandidateInterface;
 import puexamroutine.control.*;
 import puexamroutine.control.domain.*;
@@ -12,6 +14,8 @@ import puexamroutine.control.domain.*;
  * @author Sumit Shresth
  */
 public class Candidate implements CandidateInterface,java.io.Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Candidate.class);
     
     private boolean DEBUG = false;
     
@@ -64,7 +68,7 @@ public class Candidate implements CandidateInterface,java.io.Serializable {
     }
     
     public final java.util.Collection<puexamroutine.control.domain.CourseCode> getAllCoursesToAttend(){
-        if(DEBUG)System.out.println( this.ID+ " is being accessed. he/she is "+this.State +" there are "+this.RegularPapers.size()+" regular papers and "+this.BackPapers.size()+" back papers" );
+        if(DEBUG)LOGGER.debug("{} is being accessed. state={} regular={} back={}", this.ID, this.State, this.RegularPapers.size(), this.BackPapers.size());
         if( this.State == this.BACK_ONLY ){
             return this.getBackCourses();
         }
@@ -76,7 +80,7 @@ public class Candidate implements CandidateInterface,java.io.Serializable {
                 java.util.HashSet<puexamroutine.control.domain.CourseCode> list = new java.util.HashSet<puexamroutine.control.domain.CourseCode>();
                 list.addAll( this.BackPapers );
                 list.addAll( this.RegularPapers );
-                if(this.DEBUG)System.out.print("This is size of both reg and back papers "+list.size());
+                if(this.DEBUG)LOGGER.debug("Combined regular and back papers count={}", list.size());
                 return list;
             }
     }

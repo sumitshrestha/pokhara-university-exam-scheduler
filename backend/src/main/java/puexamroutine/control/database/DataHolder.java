@@ -4,6 +4,8 @@
 package puexamroutine.control.database;
 
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.domain.*;
 import puexamroutine.control.domain.list.*;
 
@@ -16,8 +18,8 @@ import puexamroutine.control.domain.list.*;
  * @author Sumit Shresth
  */
 public class DataHolder {
-    
-    private boolean DEBUG = true;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataHolder.class);
     
     public DataHolder(){                        
     }
@@ -32,13 +34,17 @@ public class DataHolder {
         this.initialize();
         this.DbReader = dbrd;
         boolean state = this.initializeExamCentreList();
-        if( ! state )throw new Exception("Center list could not be initialized...");
+        if( ! state )
+            LOGGER.warn("Center list could not be initialized");
         state = this.initializeCollegeList();
-        if( ! state )throw new Exception("College list could not be initialized...");
+        if( ! state )
+            LOGGER.warn("College list could not be initialized");
         state = this.initializeGroupList();
-        if( ! state )throw new Exception("Group list could not be initialized...");
+        if( ! state )
+            LOGGER.warn("Group list could not be initialized");
         state = this.initializeCourseList();
-        if( ! state )throw new Exception("Courses list could not be initialized...");
+        if( ! state )
+            LOGGER.warn("Courses list could not be initialized");
         
         return new UniversityDataBean( this.GroupList, this.ExamCentreList, this.CollegeList );
     }
@@ -52,7 +58,8 @@ public class DataHolder {
             this.GroupList.addCourses(grp, list);
             return true;
         }
-        catch( Exception e ){            
+        catch( Exception e ){
+            LOGGER.error("Failed to add courses for group {}:{}:{}", grp.getFaculty(), grp.getLevel(), grp.getDiscipline(), e);
             return false;
         }
     }
@@ -226,6 +233,7 @@ public class DataHolder {
             return true;
         }
         catch( Exception e ){
+            LOGGER.error("Failed to initialize exam centre list", e);
             return false;
         }
     }
@@ -244,6 +252,7 @@ public class DataHolder {
             return true;
         }
         catch( Exception e ){
+            LOGGER.error("Failed to initialize college list", e);
             return false;
         }
     }
@@ -260,8 +269,7 @@ public class DataHolder {
         if (prglist != null) {
             this.GroupList.addProgram(grp, prglist);
         } else {
-            if( this.DEBUG )
-                System.out.println("This is Group "+grp.getFaculty()+":"+grp.getLevel()+":"+grp.getDiscipline() );
+            LOGGER.warn("Program list could not be created for group {}:{}:{}", grp.getFaculty(), grp.getLevel(), grp.getDiscipline());
             return false;
         }
         return true;
@@ -275,6 +283,10 @@ public class DataHolder {
     private boolean initializeGroupList(){
         try{
             puexamroutine.control.domain.Group[] grps = getExamGroups();            
+            if( grps == null ){
+                LOGGER.error("Exam groups could not be loaded");
+                return false;
+            }
             for( int i=0; i<grps.length; i++ ){
                 if( ! initializeGroup( grps[i] ) ) // could not be initialized
                     return false;                
@@ -282,6 +294,7 @@ public class DataHolder {
             return true;
         }
         catch( Exception e ){
+            LOGGER.error("Failed to initialize group list", e);
             return false;
         }
     }
@@ -313,6 +326,7 @@ public class DataHolder {
             return grps.toArray( new puexamroutine.control.domain.Group[]{} );
         }
         catch( Exception e ){
+            LOGGER.error("Failed to read exam groups from database", e);
             return null;
         }
     }
@@ -333,6 +347,7 @@ public class DataHolder {
             return prglist;
         }
         catch( Exception e ){
+            LOGGER.error("Failed to create program list for group {}:{}:{}", grp.getFaculty(), grp.getLevel(), grp.getDiscipline(), e);
             return null;
         }
     }

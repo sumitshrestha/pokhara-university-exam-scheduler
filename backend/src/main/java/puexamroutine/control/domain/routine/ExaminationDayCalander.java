@@ -3,6 +3,8 @@
 
 package puexamroutine.control.domain.routine;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.domain.Day;
 import puexamroutine.control.domain.ExamDayIdentifier;
 
@@ -14,6 +16,8 @@ import puexamroutine.control.domain.ExamDayIdentifier;
  * @author Sumit Shresth
  */
 public class ExaminationDayCalander implements java.io.Serializable{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExaminationDayCalander.class);
     
     public ExaminationDayCalander( puexamroutine.control.domain.list.CentreTable centreTab ){
         this.resetCalanderLocation();        
@@ -133,7 +137,7 @@ public class ExaminationDayCalander implements java.io.Serializable{
         int i=1;
         while( ExamDayItr.hasNext() ){
             puexamroutine.control.domain.Day ExamDay = this.ExamCalander.get( ExamDayItr.next() );
-            System.out.println("\n"+i+"th Day "+ ExamDay.getShift() );
+            LOGGER.info("{}th Day {}", i, ExamDay.getShift());
             ExamDay.print();
             if( ExamDay.getShift() == this.DAY ){
                 i++;

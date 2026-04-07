@@ -3,11 +3,16 @@
 
 package puexamroutine.control.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  * @author Sumit Shresth
  */
 public class RegularCourses implements puexamroutine.control.domain.interfaces.DependentCourses, java.io.Serializable{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegularCourses.class);
     
     public RegularCourses( puexamroutine.control.domain.College col, puexamroutine.control.domain.Program prg, puexamroutine.control.domain.Semester Sems, java.util.HashMap<puexamroutine.control.domain.CourseCode, java.lang.Integer> pair ){        
         this.College = col;
@@ -106,10 +111,10 @@ public class RegularCourses implements puexamroutine.control.domain.interfaces.D
         while( c.hasNext() ){
             puexamroutine.control.domain.CourseCode ct = c.next();
             if( ct == null ){
-                System.out.println("course code null for "+this.College.toString()+":"+this.Prg.getProgramName()+":"+this.Semester.getSemester() );
+                LOGGER.warn("course code null for {}:{}:{}", this.College.toString(), this.Prg.getProgramName(), this.Semester.getSemester());
             }
             else
-                System.out.println( ct.toString() );
+                LOGGER.debug("{}", ct.toString());
         }
     }
     

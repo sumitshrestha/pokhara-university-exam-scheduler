@@ -3,11 +3,16 @@
 
 package puexamroutine.control.database;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  * @author Sumit Shresth
  */
 public class DatabaseConnector implements AutoCloseable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseConnector.class);
     
     /**
      * As MySQL is used to develop this system, So, The default Database URL is MySQL Database URL.
@@ -55,7 +60,7 @@ public class DatabaseConnector implements AutoCloseable {
             return true;
         }
         catch( Exception e ){
-            System.out.println("cannot connect"+ e.getMessage() );
+            LOGGER.error("Cannot connect to database", e);
             return false;
         }
     }
@@ -73,7 +78,7 @@ public class DatabaseConnector implements AutoCloseable {
             this.Conn.close();
         }
         catch( Exception e ){
-            System.out.println("error " + e.getMessage() + " while disconnection ");
+            LOGGER.warn("Error while disconnecting from database", e);
         }
     }
     

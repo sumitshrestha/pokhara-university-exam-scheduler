@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.Iterator;
 import puexamroutine.control.domain.Day;
@@ -21,6 +23,8 @@ import puexamroutine.control.domain.interfaces.CandidateInterface;
  * @author Sumit Shresth
  */
 public class ExamScheduler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExamScheduler.class);
     
     private boolean DEBUG = false;
     
@@ -48,7 +52,7 @@ public class ExamScheduler {
         if( !this.RegularCourseSetList.containsKey( grp ))
             this.RegularCourseSetList.put( grp , set );  
         else if(this.DEBUG)
-            System.out.println("setlist already contains "+ set.getGroup());
+            LOGGER.debug("setlist already contains {}", set.getGroup());
     }
     
     public void addBackCourseSet( puexamroutine.control.domain.list.IndependentCourseList BkCourse ){
@@ -56,7 +60,7 @@ public class ExamScheduler {
         if( !this.BackCoursesSetList.containsKey(grp))
             this.BackCoursesSetList.put(grp, BkCourse );
         else
-            System.out.println("back course set already in list --> ExamScheduler");
+            LOGGER.warn("back course set already in list --> ExamScheduler");
     }
     
     public void schedule(){
@@ -254,15 +258,15 @@ public class ExamScheduler {
     }
 
     private void print(){
-        System.out.println("\n\n\t\tprinting dependency");
+        LOGGER.info("printing dependency");
         java.util.Iterator<puexamroutine.control.domain.Group> grpitr = this.GroupsDependencyList.keySet().iterator();
         while( grpitr.hasNext() ){
             puexamroutine.control.domain.Group grp = grpitr.next();
-            System.out.println("\n\n"+grp.getFaculty()+":"+grp.getLevel()+";"+grp.getDiscipline());
+            LOGGER.info("{}:{};{}", grp.getFaculty(), grp.getLevel(), grp.getDiscipline());
             java.util.Iterator<puexamroutine.control.domain.Group> sortgrp = this.GroupsDependencyList.get(grp).getSortedOptimalGroup().iterator();
             while( sortgrp.hasNext() ){
                 grp = sortgrp.next();
-                System.out.println("\t"+grp.getFaculty()+":"+grp.getLevel()+";"+grp.getDiscipline());
+                LOGGER.info("{}:{};{}", grp.getFaculty(), grp.getLevel(), grp.getDiscipline());
             }
         }
     }
@@ -300,7 +304,7 @@ public class ExamScheduler {
             if( temp != null )
                 prgRout.addAll( temp.getAllProgramRoutine() );
             else if(this.DEBUG)
-                System.out.println("program routine list for "+grp.getFaculty()+":"+grp.getLevel()+":"+grp.getDiscipline()+" was null. So, skipping");
+                LOGGER.debug("program routine list for {}:{}:{} was null. So, skipping", grp.getFaculty(), grp.getLevel(), grp.getDiscipline());
         }
         return prgRout;
     }

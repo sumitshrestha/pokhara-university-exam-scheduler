@@ -5,12 +5,16 @@ package puexamroutine.control.routinegeneration;
 
 import java.util.*;
 import java.net.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author sumit
  */
 public class LinuxInetAddress {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(LinuxInetAddress.class);
     
     private final static boolean DEBUG = false;
 	
@@ -40,18 +44,18 @@ getAllLocalUsingNetworkInterface();
 
                             if( DEBUG ){
                                 
-                                System.out.println( localHost.getHostAddress() +"||||"+localHost.getCanonicalHostName()+"||||"+localHost.getHostName());                                                     
+								LOGGER.debug("{}||||{}||||{}", localHost.getHostAddress(), localHost.getCanonicalHostName(), localHost.getHostName());
                             if( localHost.isAnyLocalAddress() ){
-                                System.out.println("is any local address");
+								LOGGER.debug("is any local address");
                             }
                             if( localHost.isLinkLocalAddress() ){
-                                System.out.println("is link local address");
+								LOGGER.debug("is link local address");
                             }
                             if( localHost.isMulticastAddress() ){
-                                System.out.println("is multicast local address");
+								LOGGER.debug("is multicast local address");
                             }
                             if( localHost.isSiteLocalAddress() ){
-                                System.out.println("is site local address");
+								LOGGER.debug("is site local address");
                             }
                                 
                             }

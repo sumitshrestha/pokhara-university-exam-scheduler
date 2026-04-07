@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration.graph.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.routinegeneration.graph.domain.interfaces.OptimumColoredGraphInterface;
 
 /**
@@ -10,6 +12,8 @@ import puexamroutine.control.routinegeneration.graph.domain.interfaces.OptimumCo
  * @author Sumit Shresth
  */
 public class OptimumColoredGraph implements OptimumColoredGraphInterface {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OptimumColoredGraph.class);
     
     public OptimumColoredGraph( int[] ColorArray ){        
         this.ColorArray = ColorArray.clone();
@@ -155,20 +159,23 @@ public class OptimumColoredGraph implements OptimumColoredGraphInterface {
     }
     
     public void report(){
-        System.out.print("\n\nThese are the color combination\n");
+        StringBuilder colorCombination = new StringBuilder("These are the color combination");
         for( int i=0;i<getColorArray().length;i++){
-            System.out.print( " " + getColorArray()[i] );
+            colorCombination.append(" ").append(getColorArray()[i]);
         }
-        System.out.print("\nThese are the unique colors\n");
+        LOGGER.info("{}", colorCombination);
+        StringBuilder uniqueColors = new StringBuilder("These are the unique colors");
         for( int i=0;i<getUniqueColors().length;i++){
-            System.out.print(" " + getUniqueColors()[i] );
+            uniqueColors.append(" ").append(getUniqueColors()[i]);
         }
-        System.out.println("\nThis is unique color occurence\n");
+        LOGGER.info("{}", uniqueColors);
+        StringBuilder occurrence = new StringBuilder("This is unique color occurence");
         for( int i=0;i<this.UniqueColors.length; i++){
-            System.out.print( " "+this.UniqueColors[i] +"="+this.ColorsAmount.get( this.UniqueColors[i]));
+            occurrence.append(" ").append(this.UniqueColors[i]).append("=").append(this.ColorsAmount.get( this.UniqueColors[i]));
         }
-        System.out.println("\nThis is total unique color::" + getTotalUniqueColors());
-        System.out.println("\nThis is variance::" + getVariance() );
+        LOGGER.info("{}", occurrence);
+        LOGGER.info("This is total unique color::{}", getTotalUniqueColors());
+        LOGGER.info("This is variance::{}", getVariance());
     }
     
     private double Variance;    

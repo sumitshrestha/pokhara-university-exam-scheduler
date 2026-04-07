@@ -3,6 +3,9 @@
 
 package puexamroutine.control.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * This class represents the particular examination day.
  * Since, PU uses two shift exams, There are two shift provided.
@@ -10,6 +13,8 @@ package puexamroutine.control.domain;
  * @author Sumit Shresth
  */
 public class Day  implements java.io.Serializable{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Day.class);
     
     public Day( final puexamroutine.control.domain.ExamDayIdentifier ExamID , puexamroutine.control.domain.list.CentreTableForDay t ){
         this.ExamDayID = ExamID;
@@ -46,7 +51,7 @@ public class Day  implements java.io.Serializable{
                     this.Exams.add(exam);
                 }
                 else
-                    System.out.println( exam.getExamCourse() + "cannot be conducted in " + centID.getCentreName() + " exam due to packness");
+                    LOGGER.warn("{} cannot be conducted in {} exam due to capacity constraints", exam.getExamCourse(), centID.getCentreName());
             }
             while( centreItr.hasNext() );
             
@@ -72,7 +77,7 @@ public class Day  implements java.io.Serializable{
     public final void print(){
         java.util.Iterator<puexamroutine.control.domain.Exam> ExamsItr = this.Exams.iterator();
         while( ExamsItr.hasNext() ){
-            System.out.println("\t\t"+ ExamsItr.next().getExamCourse() );
+            LOGGER.info("{}", ExamsItr.next().getExamCourse());
         }
     }
     

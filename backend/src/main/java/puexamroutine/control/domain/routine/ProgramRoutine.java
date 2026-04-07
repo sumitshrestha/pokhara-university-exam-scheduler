@@ -3,6 +3,8 @@
 
 package puexamroutine.control.domain.routine;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.domain.Day;
 import puexamroutine.control.domain.Exam;
 
@@ -11,6 +13,8 @@ import puexamroutine.control.domain.Exam;
  * @author Sumit Shresth
  */
 public class ProgramRoutine implements java.io.Serializable{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProgramRoutine.class);
     
     public ProgramRoutine( final puexamroutine.control.domain.Program prg ){
         this.Prg = prg;
@@ -37,18 +41,18 @@ public class ProgramRoutine implements java.io.Serializable{
     }
     
     public void print(){
-        System.out.println("\n\tThe Exam Routine for the program " + this.Prg.getProgramName() );
+        LOGGER.info("The Exam Routine for the program {}", this.Prg.getProgramName());
         java.util.Iterator<puexamroutine.control.domain.Day> DayItr = this.ExamsDayList.iterator();
         while( DayItr.hasNext() ){
             puexamroutine.control.domain.Day day = DayItr.next();            
             puexamroutine.control.domain.routine.ProgramExamDayCourses routine = this.CoursesOnExamDayMap.get( day );
-            System.out.println();
-            System.out.print( day.getExamID().toString()+ " " );
+            StringBuilder message = new StringBuilder();
+            message.append(day.getExamID().toString()).append(" ");
             puexamroutine.control.domain.CourseCode[] courseitr = routine.getCoursesForDay();
             for( int i=0; i<courseitr.length; i++ ){
-                System.out.print(courseitr[i].toString() +", ");
+                message.append(courseitr[i].toString()).append(", ");
             }
-            System.out.println();
+            LOGGER.info("{}", message);
         }
     }
     

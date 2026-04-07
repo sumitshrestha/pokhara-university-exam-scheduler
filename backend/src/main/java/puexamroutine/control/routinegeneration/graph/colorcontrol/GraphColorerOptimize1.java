@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration.graph.colorcontrol;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.routinegeneration.graph.domain.interfaces.User;
 
 /**
@@ -12,6 +14,8 @@ import puexamroutine.control.routinegeneration.graph.domain.interfaces.User;
  * @author Sumit Shresth
  */
 public class GraphColorerOptimize1 extends puexamroutine.control.routinegeneration.graph.colorcontrol.GraphColorer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphColorerOptimize1.class);
     
     public GraphColorerOptimize1( User user ){        
         super( user );
@@ -33,10 +37,10 @@ public class GraphColorerOptimize1 extends puexamroutine.control.routinegenerati
         boolean st = this.mColoring(1);
         if( super.DEBUG ){
             if(st)        
-                System.out.println("The function could not execute completly");
+                LOGGER.debug("The function could not execute completly");
             else
-                System.out.println("The function executed completly");
-            System.out.println("System reached for " + this.reachedEnd + " times");
+                LOGGER.debug("The function executed completly");
+            LOGGER.debug("System reached for {} times", this.reachedEnd);
         }
     }
         
@@ -117,7 +121,7 @@ public class GraphColorerOptimize1 extends puexamroutine.control.routinegenerati
             return DiffArray.toArray( new java.lang.Integer[]{} );
         }
         catch( Exception e ){
-            System.out.println("\n\n\n\tException thrown in subtract part "+ e.getMessage() );
+            LOGGER.error("Exception thrown in subtract part", e);
             return new java.lang.Integer[]{};
         }
     }

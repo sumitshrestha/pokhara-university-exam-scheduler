@@ -10,28 +10,20 @@ package puexamroutine.control.domain;
  * 
  * @author Sumit Shrestha
  */
-public final class ExamDayIdentifier implements java.io.Serializable{
-    
-    public ExamDayIdentifier( final String S, final int d ){
-        this.Shift = S;
-        this.date = d;
-        //this.StartDate = stdt;
-    }
-    
+public record ExamDayIdentifier(String shift, int date) implements java.io.Serializable {
+
     public final String getShift(){
-        return this.Shift;
+        return this.shift;
     }
-    
+
     public final int getDate(){
         return this.date;
     }
-    
+
     @Override
     public final String toString(){
-        return this.date + " : " + this.Shift ;
+        return this.date + " : " + this.shift;
     }
 
-    private final String Shift;
-    private final int date;
     //private final java.util.Date StartDate;
 }

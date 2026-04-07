@@ -3,6 +3,8 @@
 
 package puexamroutine.control;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.routinegeneration.interfaces.SystemStepState;
 import java.rmi.*;
 import java.rmi.registry.*;
@@ -17,6 +19,8 @@ import java.awt.event.*;
  * @author Sumit Shresth
  */
 public class RemoteController implements RemoteShedulerListener{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteController.class);
     
     private final boolean DEBUG = false;
 
@@ -48,15 +52,15 @@ public class RemoteController implements RemoteShedulerListener{
            Result rs;
            do{
                if( this.ID == null ){
-                   if(this.DEBUG)System.out.println("registering for the first time...");
+                   if(this.DEBUG)LOGGER.debug("Registering for the first time");
                    this.ID = rmiServer.register();
                }
                 // call the remote method
                 rs = rmiServer.generateRoutine( this.ID, Data, Min_Gap, Max_Gap , this.ProcessingTime );
-                if(this.DEBUG)System.out.println("result obtained...");
+                if(this.DEBUG)LOGGER.debug("Result obtained from remote scheduler");
                 final String error = rs.getError();
                 if( RoutineGenerateServerInterface.CLIENT_NOT_REGISTERED.equals( error ) ){
-                    if(this.DEBUG)System.out.println("registering...");
+                    if(this.DEBUG)LOGGER.debug("Client not registered, registering again");
                     this.ID = rmiServer.register();
                 }
                 else{
@@ -67,11 +71,11 @@ public class RemoteController implements RemoteShedulerListener{
            while( true );           
        }
        catch(RemoteException e){
-           e.printStackTrace();
+           LOGGER.error("Remote scheduling failed", e);
            return new Result(false,null,null,null,e.getMessage());
        }
        catch(NotBoundException e){
-           e.printStackTrace();
+           LOGGER.error("Remote scheduler binding failed", e);
            return new Result(false,null,null,null,e.getMessage());
        }
     }
@@ -90,12 +94,12 @@ public class RemoteController implements RemoteShedulerListener{
                     while( ! ( UiListener.isCancelled() || scheduling_end ) ){
                     }                    
                     if( UiListener.isCancelled() ){
-                        if(DEBUG)System.out.println("cancelled requested by UI...");
+                        if(DEBUG)LOGGER.debug("Cancellation requested by UI");
                         rmiServer.cancel( ID );
                     }
                 }
                 catch( Exception e ){
-                    System.out.println("Error while cancelling...");
+                    LOGGER.error("Error while cancelling remote scheduling", e);
                 }
             }
         });
@@ -110,12 +114,12 @@ public class RemoteController implements RemoteShedulerListener{
                 if( ! scheduling_end ){                    
                     // if server says it cannot continue scheduling (returns false), it means the previous proecessing request has been cancelled. so, scheduling ended obtained by not'in return result
                     try{
-                        if(DEBUG)System.out.println("attempting to continue for ");
+                        if(DEBUG)LOGGER.debug("Attempting to continue scheduling");
                         scheduling_end = ! rmiServer.continueScheduling(ID, ProcessingTime);
-                        if(DEBUG)System.out.println("after continuation");
+                        if(DEBUG)LOGGER.debug("Continuation call completed");
                     }
                     catch( Exception ex ){
-                        System.out.println( "Excpetion in continue timer "+ex.getMessage() );
+                        LOGGER.error("Exception in continue timer", ex);
                     }
                 }
                 else{

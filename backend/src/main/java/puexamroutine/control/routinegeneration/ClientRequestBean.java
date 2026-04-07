@@ -4,6 +4,8 @@
 package puexamroutine.control.routinegeneration;
 
 import java.awt.event.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class represents a single request from any client.
@@ -44,6 +46,8 @@ import java.awt.event.*;
  * @author Sumit Shresth
  */
 public class ClientRequestBean{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientRequestBean.class);
     
     private final boolean DEBUG = false;
     
@@ -96,11 +100,11 @@ public class ClientRequestBean{
     private void onSingleServiceTimeCompletion(){
         if( this.TimeList.isEmpty() ){
             try{
-                if(this.DEBUG)System.out.println(this.RQ_ClientID+"'s time has expired. so, pausing it.");
+                if(this.DEBUG)LOGGER.debug("{} time has expired; pausing processing", this.RQ_ClientID);
                 this.ServiceListener.pause();
             }
             catch( Exception e ){
-                if(this.DEBUG)System.out.println( "Exception while pausing request because its time span is completed and its new continue time has not arrived. The error is  "+e.getMessage() +"\nso, Cancelling this request");
+                if(this.DEBUG)LOGGER.debug("Exception while pausing request {}; cancelling it", this.RQ_ClientID, e);
                 this.cancelRequest();
             }
         }

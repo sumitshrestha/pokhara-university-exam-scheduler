@@ -4,6 +4,8 @@
 package puexamroutine.control.database;
 
 import java.sql.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class writes into the database.
@@ -12,6 +14,8 @@ import java.sql.*;
  * @author Sumit Shresth
  */
 public class DatabaseWriter extends DatabaseReader {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseWriter.class);
     
     private boolean DEBUG = false;
     
@@ -32,7 +36,7 @@ public class DatabaseWriter extends DatabaseReader {
     private void onDebug(final String Query) throws SQLException {
         if( ! this.DEBUG )
             return;
-        System.out.println(Query);
+        LOGGER.debug(Query);
         //temp code
         super.Statement.getConnection().rollback();
         System.exit(0);

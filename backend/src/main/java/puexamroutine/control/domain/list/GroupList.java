@@ -59,10 +59,15 @@ public class GroupList implements java.io.Serializable{
      */
     public boolean setCourses( java.util.HashMap< String, String > CourseTableMap ) throws Exception{        
         try{
+            if( CourseTableMap == null )
+                CourseTableMap = new java.util.HashMap<String, String>();
             java.util.Iterator<puexamroutine.control.domain.Group> grpItr = this.getGroups().iterator();
             while( grpItr.hasNext() ){
                 Group grp = grpItr.next();
-                java.util.Iterator<CourseCode> cItr = this.getCourses( grp ).iterator();
+                puexamroutine.control.domain.list.GroupCourseList groupCourseList = this.getCourseList(grp);
+                if( groupCourseList == null )
+                    continue;
+                java.util.Iterator<CourseCode> cItr = groupCourseList.getCourses().iterator();
                 while( cItr.hasNext() ){
                     CourseCode c = cItr.next();
                     Course ctemp = new Course( c, grp, CourseTableMap.get(c.toString()));

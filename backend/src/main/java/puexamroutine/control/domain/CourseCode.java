@@ -3,6 +3,8 @@
 
 package puexamroutine.control.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.domain.interfaces.CourseCodeInterface;
 
 /**
@@ -10,6 +12,8 @@ import puexamroutine.control.domain.interfaces.CourseCodeInterface;
  * @author Sumit Shresth
  */
 public class CourseCode implements CourseCodeInterface, java.io.Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CourseCode.class);
     
     public CourseCode(){        
     }
@@ -35,8 +39,8 @@ public class CourseCode implements CourseCodeInterface, java.io.Serializable {
             this.Credit = array[1].substring( i+1 );
         }        
         if( this.Code == null || this.Credit == null || this.Prefix == null ){
-            System.out.println("\n\n\n\t\t"+CourseCode+" null pointer occured "+"\n\n");
-            System.out.println("System will exit now ...");
+            LOGGER.error("Malformed course code encountered: {}", CourseCode);
+            LOGGER.error("System will exit now");
             System.exit(1);                        
         }
         this.Code = this.Code.trim();

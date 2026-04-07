@@ -10,21 +10,17 @@ package puexamroutine.control.domain;
  * 
  * @author Sumit Shresth
  */
-public final class CentreIdentifier implements java.io.Serializable{
-    
-    public CentreIdentifier( final String n, final int MaxLimit ){
-        this.name = n.trim().toUpperCase();
-        this.MaxLimit = MaxLimit;
+public record CentreIdentifier(String name, int maxLimit) implements java.io.Serializable {
+
+    public CentreIdentifier {
+        name = name.trim().toUpperCase();
     }
-    
+
     public final String getCentreName(){
         return this.name;
     }
-    
-    public final int getMaximumCentreLimit(){
-        return this.MaxLimit;
-    }
 
-    private final String name;
-    private final int MaxLimit;
+    public final int getMaximumCentreLimit(){
+        return this.maxLimit;
+    }
 }

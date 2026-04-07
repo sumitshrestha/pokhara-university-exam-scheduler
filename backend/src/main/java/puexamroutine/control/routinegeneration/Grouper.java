@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.routinegeneration.graph.domain.GraphColoringSolution;
 import puexamroutine.control.domain.list.IndependentRegularCourseList;
 import puexamroutine.control.domain.list.IndependentCourseList;
@@ -16,6 +18,8 @@ import puexamroutine.control.routinegeneration.graph.domain.interfaces.User;
  * @author Sumit Shresth
  */
 public class Grouper implements User{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Grouper.class);
     
     private boolean DEBUG = false;
 
@@ -58,16 +62,18 @@ public class Grouper implements User{
            Dep = new java.util.HashSet<puexamroutine.control.domain.interfaces.DependentCourses>(Dep);
            Dep.addAll( RegularCoursesSet );
            if(this.DEBUG){
-               System.out.println("Total Dependent Courses are "+Dep.size());
+               LOGGER.debug("Total dependent courses are {}", Dep.size());
                java.util.Iterator<CourseCode> CItr = AllCourses.iterator();
+               StringBuilder sb = new StringBuilder();
                while( CItr.hasNext() ){
-                   System.out.print(CItr.next().toString()+", ");
+                   sb.append(CItr.next().toString()).append(", ");
                }
+               LOGGER.debug("All courses: {}", sb);
            }
            puexamroutine.control.routinegeneration.graph.domain.interfaces.KeyedAdjacancyMatrix RegularCourseGraph = this.GraphFact.getGraph( AllCourses, Dep );           
            this.CoursesGroupAnalyzer.intiialize( AllCourses.toArray( new CourseCode[]{} ), RegularCoursesSet, this.min, this.max , this.user , 1 );
            this.GraphColorer.initialize( RegularCourseGraph, this.CoursesGroupAnalyzer );
-           if(this.DEBUG)System.out.println( grp.getFaculty()+":"+grp.getLevel()+":"+grp.getDiscipline()+" started coloring...");
+           if(this.DEBUG)LOGGER.debug("{}:{}:{} started coloring", grp.getFaculty(), grp.getLevel(), grp.getDiscipline());
            this.GraphColorer.color();
            if( this.user.isCancelled() || this.CoursesGroupAnalyzer.didTimeUp() ) return null;
            //System.out.println( grp.getFaculty()+":"+grp.getDiscipline()+" finished coloring...");
@@ -77,7 +83,7 @@ public class Grouper implements User{
            return temp;
        } 
        catch( Exception e ){
-           if(this.DEBUG)System.out.println( " Error while grouping regular courses ::" + e.getMessage() );           
+           if(this.DEBUG)LOGGER.debug("Error while grouping regular courses", e);
            return null;
        }
     }

@@ -3,6 +3,9 @@
 
 package puexamroutine.control.routinegeneration.graph.domain;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * This class holds the one solution of graph coloring algrithm i.e. list of vertices with colors appropiate.
  * This will be output of graph coloring. Any system that was to analyze the solution uses object of this class.
@@ -11,6 +14,8 @@ package puexamroutine.control.routinegeneration.graph.domain;
  * @author Sumit Shresth
  */
 public class GraphColoringSolution {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphColoringSolution.class);
     
     public GraphColoringSolution( int[] colorarray, puexamroutine.control.routinegeneration.graph.domain.interfaces.AdjacancyMatrix Graph ){
         this.ColorArray = colorarray.clone();
@@ -57,15 +62,15 @@ public class GraphColoringSolution {
     
     private void print(){
         java.util.Iterator<java.lang.Integer> temp = this.GroupedVerticesIndexes.keySet().iterator();
-        System.out.println("\n");
         while( temp.hasNext() ){
             int c =temp.next();
-            System.out.print(" color "+c);
+            StringBuilder sb = new StringBuilder();
+            sb.append("color ").append(c);
             java.util.Iterator<java.lang.Integer> temp2 = this.GroupedVerticesIndexes.get( c ).iterator();
             while( temp2.hasNext() ){
-                System.out.print(" " + temp2.next() );
+                sb.append(" ").append(temp2.next());
             }
-            System.out.println("\n");
+            LOGGER.debug("{}", sb);
         }        
     }
     

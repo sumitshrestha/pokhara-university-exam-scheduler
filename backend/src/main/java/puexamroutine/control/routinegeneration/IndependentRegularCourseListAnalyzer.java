@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import puexamroutine.control.domain.RegularCourses;
 import puexamroutine.control.interfaces.DomainListener;
@@ -16,6 +18,8 @@ import puexamroutine.control.interfaces.DomainListener;
  * @author Sumit Shresth
  */
 public class IndependentRegularCourseListAnalyzer implements puexamroutine.control.routinegeneration.graph.domain.interfaces.GraphColoringSolutionAnalyzer{
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndependentRegularCourseListAnalyzer.class);
     
     private boolean DEBUG = false;
     
@@ -111,9 +115,7 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
 
     private void debug_feasibility(int index_gap, int actual_gap) {
         if (this.DEBUG ){//&& !(actual_gap < this.MAX_DISP)) {
-            System.out.println("\n\n\tNOTE FEASIBILITY \nFeasibility Debug");
-            System.out.println("index_gap(d):" + index_gap);
-            System.out.println("actual_gap:" + actual_gap);
+            LOGGER.debug("NOTE FEASIBILITY | index_gap(d):{} | actual_gap:{}", index_gap, actual_gap);
         }
     }
 
@@ -126,14 +128,22 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
      */
     private int getMaximumCloseIndexDisplacementForRegularCourse(int[] courses_index_array) {
         int Max_Close_Index_Disp = java.lang.Integer.MIN_VALUE;
-        if(this.DEBUG){System.out.println("before");for(int i=0; i<courses_index_array.length; i++ )System.out.print(courses_index_array[i]+",");}
+        if(this.DEBUG){
+            StringBuilder sb = new StringBuilder("before ");
+            for(int i=0; i<courses_index_array.length; i++ ) sb.append(courses_index_array[i]).append(",");
+            LOGGER.debug("{}", sb);
+        }
         java.util.Arrays.sort(courses_index_array);
-        if(this.DEBUG){System.out.println("before");for(int i=0; i<courses_index_array.length; i++ )System.out.print(courses_index_array[i]+",");}
+        if(this.DEBUG){
+            StringBuilder sb = new StringBuilder("after sort ");
+            for(int i=0; i<courses_index_array.length; i++ ) sb.append(courses_index_array[i]).append(",");
+            LOGGER.debug("{}", sb);
+        }
         for (int j = 0; j < courses_index_array.length - 1; j++) {
             int temp_Disp = java.lang.Math.abs(courses_index_array[j+1] - courses_index_array[j]);
             if (temp_Disp > Max_Close_Index_Disp) {
                 Max_Close_Index_Disp = temp_Disp;
-                if(this.DEBUG)System.out.println("new assignment to max "+temp_Disp);
+                if(this.DEBUG)LOGGER.debug("new assignment to max {}", temp_Disp);
             }
         }
         return Max_Close_Index_Disp;
@@ -153,14 +163,14 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
             
             int min= this.ColoredCoursesList.getIndex(c);
             int max = min;        
-            if(this.DEBUG)System.out.println("index of "+c.toString()+" is "+ min);
+            if(this.DEBUG)LOGGER.debug("index of {} is {}", c.toString(), min);
             courses_index_array[i] = min;
         
         while( RegItr.hasNext() ){            
             puexamroutine.control.domain.CourseCode c1 = RegItr.next();            
             int index = this.ColoredCoursesList.getIndex(c1);
             courses_index_array[++i] = index;
-        if(this.DEBUG)System.out.println("index of "+c1.toString()+" is "+ index);
+        if(this.DEBUG)LOGGER.debug("index of {} is {}", c1.toString(), index);
             if( index == -1 )
                 continue;
             
@@ -176,7 +186,7 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
             Data.setMinIndex(min);
             
             int Max_Close_Index_Disp = getMaximumCloseIndexDisplacementForRegularCourse(courses_index_array);
-            if(this.DEBUG ) System.out.println("the value of maximum being set is "+Max_Close_Index_Disp);
+            if(this.DEBUG ) LOGGER.debug("the value of maximum being set is {}", Max_Close_Index_Disp);
             Data.setMaxCloseCourseIndexDisplacement( Max_Close_Index_Disp  );
             
             return Data;
@@ -241,7 +251,7 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
          */
         int index_gap = list.getMaximumCloseIndexDisplacement();        
         if( index_gap == java.lang.Integer.MIN_VALUE ){
-            if(this.DEBUG)System.out.println("\n\nindex gap is minimum so returning...");
+            if(this.DEBUG)LOGGER.debug("index gap is minimum so returning...");
             return true;// see up in docs for exceptions
         }
         int actual_gap = index_gap * ( this.MIN_DISP + 1 ) - 1;
@@ -347,16 +357,18 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
     private boolean generateCombination( int[] array, int index ){        
         if( index == array.length ){
             if( this.DEBUG ){
-                System.out.println( "one combination" );
+                LOGGER.debug("one combination");
+                StringBuilder sb = new StringBuilder();
                 for( int k = 0; k < array.length; k++){
-                    System.out.print( array[k]+"-" );
+                    sb.append(array[k]).append("-");
                 }
+                LOGGER.debug("{}", sb);
             }
             if( this.ColoredCoursesList.setCombination(array) ){
                 return this.is_list_feasible();
             }
             else{
-                if(this.DEBUG)System.out.println("combination could not be set...");
+                if(this.DEBUG)LOGGER.debug("combination could not be set...");
                 return false;
             }
         }
@@ -403,7 +415,7 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
      */
     private final boolean seeIfUserPauses(){
         try{            
-            if(this.DEBUG)System.out.println( "i m seeing if user has paused in graph coloring" );                                    
+            if(this.DEBUG)LOGGER.debug("seeing if user has paused in graph coloring");
             if( this.User.isPaused() ){
                 //this.PauseTimeUp = false;//pausing is just starting up
                 //wait for 5 minutes
@@ -415,14 +427,14 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
                         ((javax.swing.Timer)e.getSource()).stop();                        
                     }        
                 }).start();
-                if(this.DEBUG)System.out.println("getting to sleep");                    
+                if(this.DEBUG)LOGGER.debug("getting to sleep");
                 spinLock();
-                if(this.DEBUG)System.out.println( "waking after being paused" );
+                if(this.DEBUG)LOGGER.debug("waking after being paused");
             }            
             return ! ( this.User.isCancelled() || this.PauseTimeUp );
         }
         catch( Exception e ){
-            if(this.DEBUG)System.err.println( "Cannot pause graph coloring due to "+e.getMessage() );
+            if(this.DEBUG)LOGGER.error("Cannot pause graph coloring", e);
             return false;
         }
     }

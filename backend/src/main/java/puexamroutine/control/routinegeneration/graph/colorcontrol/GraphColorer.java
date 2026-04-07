@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration.graph.colorcontrol;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.routinegeneration.graph.domain.interfaces.User;
 
 /**
@@ -10,6 +12,8 @@ import puexamroutine.control.routinegeneration.graph.domain.interfaces.User;
  * @author Sumit Shresth
  */
 public class GraphColorer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphColorer.class);
     
     protected boolean DEBUG = false;
     
@@ -29,7 +33,7 @@ public class GraphColorer {
         }
         catch( Exception e ){
             this.state = true;
-            System.out.println("error in Graph color initialize " + e.getMessage() );
+            LOGGER.error("error in Graph color initialize", e);
             return false;
         }
     }
@@ -40,7 +44,7 @@ public class GraphColorer {
         
         //int Chromatic = this.Graph.getDegree();
         int Chromatic = this.getMeanDegree();// use mean of vertex degree to approx chromatic no.
-        if(this.DEBUG)System.out.println("initial chromatic no " + Chromatic );
+        if(this.DEBUG)LOGGER.debug("initial chromatic no {}", Chromatic);
         this.OptimizeFlag = false;
         do{
             try{
@@ -53,10 +57,10 @@ public class GraphColorer {
             
             if(this.DEBUG){
                 if(st)
-                    System.out.println("The function could not execute completly");
+                    LOGGER.debug("The function could not execute completly");
                 else
-                    System.out.println("The function executed completly");
-                System.out.println("System reached for " + this.reachedEnd + " times");
+                    LOGGER.debug("The function executed completly");
+                LOGGER.debug("System reached for {} times", this.reachedEnd);
             }
             
             }
@@ -149,7 +153,7 @@ public class GraphColorer {
             return false;
         }
         else{
-            if(this.DEBUG)System.out.println("feasible found...");
+            if(this.DEBUG)LOGGER.debug("feasible found...");
             if( this.GraphColorAnalyzer.isOptimal(Sol) ){                
                 this.OptimalSolution = Sol;
                 return true;
@@ -160,7 +164,7 @@ public class GraphColorer {
                 }
             else
                 if( this.GraphColorAnalyzer.isMoreOptimal(Sol, this.OptimalSolution ) ){
-                    if(this.DEBUG) System.out.println( " more optimal found using comparing... ");
+                    if(this.DEBUG) LOGGER.debug("more optimal found using comparing...");
                     this.OptimalSolution = Sol;
                     return false;
                 }
@@ -193,9 +197,11 @@ public class GraphColorer {
     }
     
     private void print(){
+        StringBuilder sb = new StringBuilder();
         for( int i=0; i<this.array.length; i++ ){
-            System.out.print("  "+i+"th :"+this.array[i] );
+            sb.append("  ").append(i).append("th :").append(this.array[i]);
         }
+        LOGGER.debug("{}", sb);
     }
     
     protected int reachedEnd;

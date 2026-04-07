@@ -3,6 +3,8 @@
 
 package puexamroutine.control;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.routinegeneration.*;
 import puexamroutine.control.interfaces.*;
 import puexamroutine.control.schedule.Result;
@@ -16,6 +18,8 @@ import java.util.Iterator;
  * @author Sumit Shresth
  */
 public class Controller {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
     
     /*
      * This is essential state for debugging
@@ -26,7 +30,7 @@ public class Controller {
         this.Connecter = new puexamroutine.control.database.DatabaseConnector( DriverName, DatabaseURL );
         if( this.Connecter.connect(User, passd)){
             if( DEBUG ){
-                System.out.println( "\n\t\tNote\nSystem is in Debugging mode \n\tSo, database is not in autocommit mode" );
+                LOGGER.debug("System is in debugging mode; database autocommit is disabled");
                 this.Connecter.getConnection().setAutoCommit( false );
             }
             read(CourseCodeName, ProgramField, RegularCourseTableName, CourseTable, SemesterFieldName, DatabaseName, BackTable, CandidateIDField, PrgTab, FacField, LevelField, Max, Min);
@@ -198,7 +202,7 @@ public class Controller {
             while (codeItr.hasNext()) {
                 CourseCode course = codeItr.next();
                 if (!this.Writer.addRegularCourse(course.toString(), College, Program, reg.getSemester().getSemester(), reg.getTotalStudents(course))) {                    
-                    System.err.println("Error in Course Addition: " + course.toString() + " cannot be added");
+                    LOGGER.error("Error in course addition: {} cannot be added", course.toString());
                     if( onError( false ) )return false;                
                 }
             }

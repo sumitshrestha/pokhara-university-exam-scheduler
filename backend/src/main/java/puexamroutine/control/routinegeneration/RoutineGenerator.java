@@ -3,6 +3,8 @@
 
 package puexamroutine.control.routinegeneration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import puexamroutine.control.routinegeneration.interfaces.SystemStepState;
 import puexamroutine.control.interfaces.*;
 import puexamroutine.control.domain.list.UniversityDataBean;
@@ -20,6 +22,8 @@ import puexamroutine.control.domain.list.UniversityDataBean;
  * @author Sumit Shresth
  */
 public class RoutineGenerator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RoutineGenerator.class);
     
     private boolean DEBUG = false;
     
@@ -78,7 +82,7 @@ public class RoutineGenerator {
               //      ExamSceduler.addBackCourseSet( grpBkPapers );
                 }
                 else{
-                    if(this.DEBUG)System.out.println("This is for group"+group.getFaculty()+":"+group.getDiscipline());
+                    if(this.DEBUG)LOGGER.debug("Grouping failed for group {}:{}:{}", group.getFaculty(), group.getLevel(), group.getDiscipline());
                     step.setError( "Group "+group.getFaculty()+":"+group.getLevel()+":"+group.getDiscipline()+" cannot be grouped" );
                     UnScheduledGroupList.add(group);
                 }

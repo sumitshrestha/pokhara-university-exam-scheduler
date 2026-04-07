@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS `course` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -------------------------------------------
--- Table: program (called "Program" in app)
+-- Table: Program (legacy table name is case-sensitive on Linux)
 -- Maps faculty / level / discipline to programs
 -- -------------------------------------------
-CREATE TABLE IF NOT EXISTS `program` (
+CREATE TABLE IF NOT EXISTS `Program` (
   `Faculty`    VARCHAR(100) DEFAULT NULL,
   `Level`      VARCHAR(100) DEFAULT NULL,
   `Discipline` VARCHAR(100) DEFAULT NULL,

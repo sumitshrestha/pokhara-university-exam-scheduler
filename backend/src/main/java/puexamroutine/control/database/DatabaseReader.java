@@ -7,12 +7,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Sumit Shresth
  */
 public class DatabaseReader {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseReader.class);
     
     public static final String getDefaultCourseCodeField(){
         return "CourseCode";
@@ -305,7 +309,7 @@ public class DatabaseReader {
             return this.Statement.execute(quey);            
         }
         catch( Exception e){
-            System.out.println("Database "+this.DatabaseName+"cannot be selected due to " + e.getMessage());
+            LOGGER.warn("Database {} cannot be selected", this.DatabaseName, e);
             return false;
         }
     }
