@@ -4,9 +4,16 @@ dist/
 
 # Gradle
 .gradle/
+backend/.gradle/
+backend/build/
 
 # NetBeans private project settings
 nbproject/private/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
 
 # Compiled classes
 **/*.class
