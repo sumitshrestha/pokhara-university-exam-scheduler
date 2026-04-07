@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import puexamroutine.control.Controller;
 import puexamroutine.control.database.DatabaseReader;
+import puexamroutine.control.interfaces.DomainListener;
+import puexamroutine.control.routinegeneration.interfaces.SystemStepState;
 
 @Configuration
 public class AppConfig {
@@ -31,7 +33,7 @@ public class AppConfig {
     public Controller controller() throws Exception {
         String normalizedDbUrl = dbUrl.endsWith("/") ? dbUrl : dbUrl + "/";
 
-        return new Controller(
+        Controller controller = new Controller(
             normalizedDbUrl,
                 "com.mysql.cj.jdbc.Driver",
                 username,
@@ -50,5 +52,25 @@ public class AppConfig {
                 minGap,
                 maxGap
         );
+
+        // The legacy scheduler expects a listener; API mode uses a no-op implementation.
+        controller.setListener(new DomainListener() {
+            @Override
+            public void notify(SystemStepState state) {
+                // No-op in stateless API mode.
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return false;
+            }
+
+            @Override
+            public boolean isPaused() {
+                return false;
+            }
+        });
+
+        return controller;
     }
 }

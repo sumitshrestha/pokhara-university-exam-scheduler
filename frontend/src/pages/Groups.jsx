@@ -6,29 +6,50 @@ export default function Groups() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    axios.get('/api/groups')
-      .then(r => setGroups(r.data))
-      .catch(() => setError('Could not load groups. Is the backend running?'))
+    const loadGroups = async () => {
+      try {
+        const metadataResponse = await axios.get('/api/data/registration-metadata')
+        const metadataGroups = metadataResponse.data?.groups
+        if (Array.isArray(metadataGroups) && metadataGroups.length > 0) {
+          setGroups(metadataGroups)
+          return
+        }
+
+        const groupsResponse = await axios.get('/api/groups')
+        const fallbackGroups = Array.isArray(groupsResponse.data?.groups)
+          ? groupsResponse.data.groups
+          : Array.isArray(groupsResponse.data)
+            ? groupsResponse.data
+            : []
+        setGroups(fallbackGroups)
+      } catch (e) {
+        const backendError = e?.response?.data?.error
+        setError(backendError ?? 'Could not load groups. Is the backend running?')
+      }
+    }
+
+    loadGroups()
   }, [])
 
   if (error) return <p className="error">{error}</p>
   if (!groups) return <p>Loading…</p>
 
-  const entries = Object.entries(groups.groupsPrograms ?? {})
-
   return (
     <div>
       <h1>Groups &amp; Programs</h1>
-      {entries.length === 0 && <p>No groups found in the database.</p>}
-      {entries.map(([group, programList]) => (
-        <div className="card" key={group}>
-          <strong>{group}</strong>
-          {programList?.programs?.length > 0 && (
+      {groups.length === 0 && <p>No groups found in the database.</p>}
+      {groups.map(group => (
+        <div className="card" key={`${group.faculty}-${group.level}-${group.discipline}`}>
+          <strong>{`${group.faculty} / ${group.level} / ${group.discipline}`}</strong>
+          {group.programs?.length > 0 && (
             <table style={{ marginTop: '0.6rem' }}>
-              <thead><tr><th>Program</th></tr></thead>
+              <thead><tr><th>Program</th><th>Colleges</th></tr></thead>
               <tbody>
-                {programList.programs.map(p => (
-                  <tr key={p.programName}><td>{p.programName}</td></tr>
+                {group.programs.map(program => (
+                  <tr key={typeof program === 'string' ? program : program.name}>
+                    <td>{typeof program === 'string' ? program : program.name}</td>
+                    <td>{typeof program === 'string' ? '-' : (program.colleges ?? []).join(', ')}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>

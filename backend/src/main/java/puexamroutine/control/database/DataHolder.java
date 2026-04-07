@@ -346,7 +346,7 @@ public class DataHolder {
             }
             return prglist;
         }
-        catch( Exception e ){
+            catch( Exception e ){
             LOGGER.error("Failed to create program list for group {}:{}:{}", grp.getFaculty(), grp.getLevel(), grp.getDiscipline(), e);
             return null;
         }
