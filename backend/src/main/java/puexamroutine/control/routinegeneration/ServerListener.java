@@ -5,6 +5,7 @@ package puexamroutine.control.routinegeneration;
 
 import puexamroutine.control.interfaces.*;
 import java.rmi.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import puexamroutine.control.routinegeneration.interfaces.SystemStepState;
 
 /**
@@ -34,7 +35,7 @@ class ServerListener implements DomainListener{
     public boolean isCancelled(){
         try{
             if( this.remoteListener != null )
-                return this.isCancel || this.remoteListener.isCancelled();
+                return this.isCancel.get() || this.remoteListener.isCancelled();
             else
                 return false;
         }
@@ -44,23 +45,23 @@ class ServerListener implements DomainListener{
     }
     
     public boolean isPaused(){
-        return this.isPaused;
+        return this.isPaused.get();
     }
     
     public void cancel(){
         //System.out.println("cancel called...");
-        this.isCancel = true;
+        this.isCancel.set(true);
     }
     
     public void pause(){
-        this.isPaused = true;
+        this.isPaused.set(true);
     }
     
     public void unPause(){
-        this.isPaused = false;
+        this.isPaused.set(false);
     }
     
     private final RemoteShedulerListener remoteListener;
-    private boolean isCancel = false;
-    private boolean isPaused = false;
+    private final AtomicBoolean isCancel = new AtomicBoolean(false);
+    private final AtomicBoolean isPaused = new AtomicBoolean(false);
 }

@@ -4,6 +4,8 @@
 package puexamroutine.control.routinegeneration;
 
 import java.awt.event.*;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,18 +85,22 @@ public class ClientRequestBean{
         if( this.ServiceListener.isCancelled() )
             return false;
         
-        this.TimeList.add(time);        
+        this.TimeList.offer(time);
         
         if( this.ServiceListener.isPaused() ){
-            restartPausedProcessing();
+            synchronized (this.timerLock) {
+                restartPausedProcessing();
+            }
         }
         
         return true;
     }
         
-    private final void onTick(){        
+        private final void onTick(){
+            synchronized (this.timerLock) {
             this.timer.stop();
-            this.onSingleServiceTimeCompletion();                    
+            this.onSingleServiceTimeCompletion();
+            }
     }
     
     private void onSingleServiceTimeCompletion(){
@@ -119,15 +125,23 @@ public class ClientRequestBean{
     }
 
     private void restartProcessing() {
-        this.TargetTime = this.TimeList.remove();        
+        Long nextTime = this.TimeList.poll();
+        if (nextTime == null) {
+            this.ServiceListener.pause();
+            return;
+        }
+        this.TargetTime = nextTime;
+        this.timer.setInitialDelay(((int) this.TargetTime) * this.timeUnit);
+        this.timer.setDelay(((int) this.TargetTime) * this.timeUnit);
         this.timer.restart();
     }
     
     private final String RQ_ClientID;    
     private final ServerListener ServiceListener;
     private final RoutineGenerator Generator;
-    private java.util.Queue<java.lang.Long> TimeList = new java.util.LinkedList<java.lang.Long>();
+    private Queue<java.lang.Long> TimeList = new ConcurrentLinkedQueue<java.lang.Long>();
     private javax.swing.Timer timer = null;
+    private final Object timerLock = new Object();
     private final int timeUnit = 1000;//1 second unit
     private long TargetTime;    
 }

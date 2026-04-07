@@ -6,6 +6,9 @@ package puexamroutine.control.routinegeneration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Iterator;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import puexamroutine.control.domain.RegularCourses;
 import puexamroutine.control.interfaces.DomainListener;
 
@@ -333,25 +336,18 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
         }
         this.CurrentColoredCoursesVariance = java.lang.Double.MAX_VALUE;
 
-        /**
-         * This is very important technical step.
-         * The garbage collector is forcefully called to allow garbage collection of the useless instances of GraphColoringSolution and RegularCourseStatistics that are created for each call to isFeasible
-         * The main reason of this is that isFeasible is called very often i.e. it is the bottle neck of system
-         * For each group this func may be called for too much time that is equal to total amount of color combination at the worst case
-         * Each call to feasible creates many objects, This eats up too much memory in a very short period.
-         * Practical running of system has finally shown that this rate is much higher than what automatic garbage collector can do.
-         * So, This causes system memory error very quickly causing system to go into undesirable state.
-         * So, This forces the useless objects to be garbaged to be reused in future and thus helps in overall controll of memory usage by system
-         */
-        System.gc();
-
         return this.checkFeasibility(this.CurrentColoredCoursesRecord);
     }
     
     //  10/12/2008
     private boolean generateCombinationAndCheckFeasibility(){
-        int n = this.ColoredCoursesList.getTotalIndependentCoursesGroup();        
-        return generateCombination( new int[n], 0 );        
+        int n = this.ColoredCoursesList.getTotalIndependentCoursesGroup();
+        if (this.combinationBuffer == null || this.combinationBuffer.length != n) {
+            this.combinationBuffer = new int[n];
+        } else {
+            Arrays.fill(this.combinationBuffer, 0);
+        }
+        return generateCombination(this.combinationBuffer, 0);
     }
     
     private boolean generateCombination( int[] array, int index ){        
@@ -417,18 +413,9 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
         try{            
             if(this.DEBUG)LOGGER.debug("seeing if user has paused in graph coloring");
             if( this.User.isPaused() ){
-                //this.PauseTimeUp = false;//pausing is just starting up
-                //wait for 5 minutes
-                new javax.swing.Timer( this.MAXIMUM_TIME_OUT_TIME*60*100, new java.awt.event.ActionListener() {        
-                    public void actionPerformed( java.awt.event.ActionEvent e ) {
-                        if( User.isPaused() && ! User.isCancelled() ){ // see if still locked in spin lock
-                            PauseTimeUp = true; //if still in spin lock then end as time out has happened and no one has yet un paused it otherwise isPaused wouldnt still remain true
-                        }                        
-                        ((javax.swing.Timer)e.getSource()).stop();                        
-                    }        
-                }).start();
+                this.PauseTimeUp = false;
                 if(this.DEBUG)LOGGER.debug("getting to sleep");
-                spinLock();
+                spinLock(this.MAXIMUM_TIME_OUT_TIME);
                 if(this.DEBUG)LOGGER.debug("waking after being paused");
             }            
             return ! ( this.User.isCancelled() || this.PauseTimeUp );
@@ -449,10 +436,17 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
      * 
      * @see didTimeUp()
      */
-    private final void spinLock() {
-        while ( ! this.didTimeUp() && this.User.isPaused() && !this.User.isCancelled()) {
-            ;
-        }        
+    private final void spinLock(int maxTimeoutMinutes) {
+        long timeoutNanos = TimeUnit.MINUTES.toNanos(maxTimeoutMinutes);
+        long deadline = System.nanoTime() + timeoutNanos;
+        while (this.User.isPaused() && !this.User.isCancelled()) {
+            if (System.nanoTime() >= deadline) {
+                this.PauseTimeUp = true;
+                return;
+            }
+            // Park briefly to avoid CPU-intensive spin while paused.
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(20));
+        }
     }
     
     /**
@@ -467,6 +461,7 @@ public class IndependentRegularCourseListAnalyzer implements puexamroutine.contr
         return this.PauseTimeUp;
     }
     
-    private boolean PauseTimeUp = false;
+    private volatile boolean PauseTimeUp = false;
+    private int[] combinationBuffer;
     private int MAXIMUM_TIME_OUT_TIME;//minutes
 }

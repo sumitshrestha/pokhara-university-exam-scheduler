@@ -13,6 +13,7 @@ import puexamroutine.control.interfaces.*;
 import puexamroutine.control.schedule.Result;
 import puexamroutine.control.routinegeneration.RoutineGenerateServerInterface;
 import java.awt.event.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -43,7 +44,7 @@ public class RemoteController implements RemoteShedulerListener{
     public Result scheduleRemoteRoutine( final String ip, final int port, final UniversityDataBean Data, final int Min_Gap, final int Max_Gap  ){
         try{
            // get the “registry”
-           Registry registry=LocateRegistry.getRegistry( ip,(new Integer( port )).intValue() );
+           Registry registry=LocateRegistry.getRegistry( ip, port );
            // look up the remote object
            rmiServer=(RoutineGenerateServerInterface)(registry.lookup( RoutineGenerateServerInterface.SERVER_NAME ));           
            notifyUserListener();
@@ -64,7 +65,7 @@ public class RemoteController implements RemoteShedulerListener{
                     this.ID = rmiServer.register();
                 }
                 else{
-                    this.scheduling_end = true; //signal others abt ending of scheduling
+                    this.scheduling_end.set(true); //signal others abt ending of scheduling
                     return rs;
                 }
            }
@@ -83,26 +84,33 @@ public class RemoteController implements RemoteShedulerListener{
     private void notifyUserListener() {        
         SystemStepState state = new SystemStepState();
         state.setPredictable(false);
-        this.UiListener.notify(state);
+        if (this.UiListener != null) {
+            this.UiListener.notify(state);
+        }
     }
     
     private void watchForCancel(){
         Thread t = new Thread( new java.lang.Runnable() {
             public void run() {
                 try{
-                    scheduling_end = false;
-                    while( ! ( UiListener.isCancelled() || scheduling_end ) ){
+                    scheduling_end.set(false);
+                    while( ! ( UiListener.isCancelled() || scheduling_end.get() ) ){
+                        Thread.sleep(50);
                     }                    
                     if( UiListener.isCancelled() ){
                         if(DEBUG)LOGGER.debug("Cancellation requested by UI");
                         rmiServer.cancel( ID );
                     }
                 }
+                catch( InterruptedException interruptedException ){
+                    Thread.currentThread().interrupt();
+                }
                 catch( Exception e ){
                     LOGGER.error("Error while cancelling remote scheduling", e);
                 }
             }
         });
+        t.setDaemon(true);
         //t.setPriority( Thread.MAX_PRIORITY );
         t.start();
     }
@@ -111,11 +119,11 @@ public class RemoteController implements RemoteShedulerListener{
         final int time = (int)this.ProcessingTime * 1000;        
         javax.swing.Timer timer = new javax.swing.Timer( time, new java.awt.event.ActionListener() {        
             public void actionPerformed( ActionEvent e) {
-                if( ! scheduling_end ){                    
+                if( ! scheduling_end.get() ){                    
                     // if server says it cannot continue scheduling (returns false), it means the previous proecessing request has been cancelled. so, scheduling ended obtained by not'in return result
                     try{
                         if(DEBUG)LOGGER.debug("Attempting to continue scheduling");
-                        scheduling_end = ! rmiServer.continueScheduling(ID, ProcessingTime);
+                        scheduling_end.set(!rmiServer.continueScheduling(ID, ProcessingTime));
                         if(DEBUG)LOGGER.debug("Continuation call completed");
                     }
                     catch( Exception ex ){
@@ -133,6 +141,6 @@ public class RemoteController implements RemoteShedulerListener{
     private DomainListener UiListener;
     private RoutineGenerateServerInterface rmiServer;
     private String ID=null;
-    private boolean scheduling_end;
+    private final AtomicBoolean scheduling_end = new AtomicBoolean(false);
     private long ProcessingTime = 20;//seconds
 }
