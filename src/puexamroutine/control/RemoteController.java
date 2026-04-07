@@ -103,13 +103,6 @@ public class RemoteController implements RemoteShedulerListener{
         t.start();
     }
     
-    @Override
-    public void finalize(){
-        if( ! this.scheduling_end ){// scheduling is still being done
-            System.out.println("Scheduling is still being done...");
-        }
-    }
-    
     private void watchForTimeContinuation(){
         final int time = (int)this.ProcessingTime * 1000;        
         javax.swing.Timer timer = new javax.swing.Timer( time, new java.awt.event.ActionListener() {        

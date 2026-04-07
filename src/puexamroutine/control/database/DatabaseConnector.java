@@ -7,7 +7,7 @@ package puexamroutine.control.database;
  *
  * @author Sumit Shresth
  */
-public class DatabaseConnector {
+public class DatabaseConnector implements AutoCloseable {
     
     /**
      * As MySQL is used to develop this system, So, The default Database URL is MySQL Database URL.
@@ -22,7 +22,7 @@ public class DatabaseConnector {
      * @return Default name of Driver 
      */
     public static final String getDefaultDriverName(){
-        return "com.mysql.jdbc.Driver";
+        return "com.mysql.cj.jdbc.Driver";
     }
     
     public static final String getDefaultUserName(){
@@ -43,7 +43,8 @@ public class DatabaseConnector {
         this.DriverName = this.getDefaultDriverName();
     }
     
-    public void finalize(){
+    @Override
+    public void close(){
         this.disconnect();
     }
     
