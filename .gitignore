@@ -1,0 +1,23 @@
+# Build output
+build/
+dist/
+
+# NetBeans private project settings
+nbproject/private/
+
+# Compiled classes
+**/*.class
+
+# JAR artifacts
+*.jar
+
+# Log files
+wget-log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+*.iml
+.idea/
