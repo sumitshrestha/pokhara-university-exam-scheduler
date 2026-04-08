@@ -16,7 +16,19 @@ export default function Schedule() {
       const res = await axios.post('/api/schedule/generate', { minGap, maxGap })
       setResult(res.data)
     } catch (e) {
-      setError(e?.response?.data?.error ?? 'Failed to generate schedule')
+      const payload = e?.response?.data
+      if (payload && typeof payload === 'object') {
+        setResult(payload)
+      }
+
+      const status = payload?.scheduleStatus
+      const message = payload?.message ?? payload?.error
+
+      if (message && status) {
+        setError(`${status}: ${message}`)
+      } else {
+        setError(message ?? 'Failed to generate schedule')
+      }
     } finally {
       setLoading(false)
     }

@@ -295,6 +295,18 @@ public class DatabaseWriter extends DatabaseReader {
             return false;
         }
     }
+
+    public boolean removeBackCandidatesForProgramCollege(final String college, final String program) {
+        try {
+            final String Query = "delete from " + super.BackTable + " where "
+                    + super.College + "='" + college + "' AND "
+                    + super.ProgramField + "='" + program + "';";
+            super.Statement.executeUpdate(Query);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
     
     public boolean updateBackCandidate( final String oldCand, final String newCand ){
         try{

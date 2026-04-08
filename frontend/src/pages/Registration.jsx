@@ -18,6 +18,28 @@ function createEmptyCourseRow() {
   }
 }
 
+function createEmptyBackPaperRow() {
+  return {
+    id: createRowId(),
+    candidateId: '',
+    semester: '',
+    code: '',
+    name: '',
+  }
+}
+
+function isCourseDraftEmpty(courses) {
+  if (!Array.isArray(courses) || courses.length === 0) {
+    return true
+  }
+
+  return courses.every((course) => (
+    !course.code.trim()
+      && !course.name.trim()
+      && String(course.totalCandidates ?? '').trim() === ''
+  ))
+}
+
 function normalize(value) {
   return value.trim().toUpperCase()
 }
@@ -45,6 +67,9 @@ export default function Registration() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [submitSuccess, setSubmitSuccess] = useState('')
+  const [backPaperRows, setBackPaperRows] = useState([createEmptyBackPaperRow()])
+  const [loadingBackPapers, setLoadingBackPapers] = useState(false)
+  const [savingBackPapers, setSavingBackPapers] = useState(false)
   const [form, setForm] = useState({
     faculty: '',
     level: '',
@@ -111,6 +136,61 @@ export default function Registration() {
     }
   }, [])
 
+  useEffect(() => {
+    let isMounted = true
+    const program = normalize(form.program)
+    const college = normalize(form.college)
+
+    async function loadBackPapers() {
+      if (!program || !college) {
+        setBackPaperRows([createEmptyBackPaperRow()])
+        return
+      }
+
+      setLoadingBackPapers(true)
+      try {
+        const response = await axios.get('/api/data/backpapers', {
+          params: { program, college },
+        })
+
+        if (!isMounted) {
+          return
+        }
+
+        const rows = Array.isArray(response.data?.backPapers) ? response.data.backPapers : []
+        if (!rows.length) {
+          setBackPaperRows([createEmptyBackPaperRow()])
+          return
+        }
+
+        setBackPaperRows(rows.map((row) => ({
+          id: createRowId(),
+          candidateId: row.candidateId ?? '',
+          semester: row.semester ?? '',
+          code: row.code ?? '',
+          name: row.name ?? '',
+        })))
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+
+        setSubmitError(error?.response?.data?.error ?? 'Could not load back-paper candidates.')
+        setBackPaperRows([createEmptyBackPaperRow()])
+      } finally {
+        if (isMounted) {
+          setLoadingBackPapers(false)
+        }
+      }
+    }
+
+    loadBackPapers()
+
+    return () => {
+      isMounted = false
+    }
+  }, [form.program, form.college])
+
   const groups = metadata?.groups ?? []
   const centres = metadata?.centres ?? []
   const matchingGroup = findMatchingGroup(groups, form.faculty, form.level, form.discipline)
@@ -135,6 +215,10 @@ export default function Registration() {
   const knownCourseCount = form.courses.filter((course) => (
     courseSuggestions.some((suggestion) => suggestion.code === normalize(course.code))
   )).length
+  const backPaperSubjectCount = backPaperRows.filter((row) => row.code.trim()).length
+  const backPaperCandidateCount = new Set(backPaperRows
+    .map((row) => normalize(row.candidateId))
+    .filter(Boolean)).size
 
   const setField = (field, value) => {
     setSubmitError('')
@@ -229,6 +313,133 @@ export default function Registration() {
         totalCandidates: '',
       })),
     }))
+  }
+
+  useEffect(() => {
+    if (!courseSuggestions.length) {
+      return
+    }
+
+    setForm((current) => {
+      if (!isCourseDraftEmpty(current.courses)) {
+        return current
+      }
+
+      return {
+        ...current,
+        courses: courseSuggestions.map((course) => ({
+          id: createRowId(),
+          code: course.code,
+          name: course.name,
+          totalCandidates: '',
+        })),
+      }
+    })
+  }, [courseSuggestions])
+
+  const updateBackPaperRow = (rowId, field, value) => {
+    setSubmitError('')
+    setSubmitSuccess('')
+
+    setBackPaperRows((current) => current.map((row) => {
+      if (row.id !== rowId) {
+        return row
+      }
+
+      const nextRow = {
+        ...row,
+        [field]: value,
+      }
+
+      if (field === 'code') {
+        const matchingCourse = courseSuggestions.find((suggestion) => suggestion.code === normalize(value))
+        if (matchingCourse) {
+          nextRow.name = matchingCourse.name
+        }
+      }
+
+      return nextRow
+    }))
+  }
+
+  const addBackPaperRow = () => {
+    setSubmitError('')
+    setSubmitSuccess('')
+    setBackPaperRows((current) => [...current, createEmptyBackPaperRow()])
+  }
+
+  const removeBackPaperRow = (rowId) => {
+    setSubmitError('')
+    setSubmitSuccess('')
+
+    setBackPaperRows((current) => {
+      if (current.length === 1) {
+        return current
+      }
+
+      return current.filter((row) => row.id !== rowId)
+    })
+  }
+
+  const handleSaveBackPapers = async () => {
+    setSubmitError('')
+    setSubmitSuccess('')
+
+    const payloadRows = backPaperRows
+      .map((row) => ({
+        candidateId: normalize(row.candidateId),
+        semester: normalize(row.semester),
+        code: normalize(row.code),
+        name: row.name.trim(),
+      }))
+      .filter((row) => row.candidateId || row.semester || row.code || row.name)
+
+    const invalidRow = payloadRows.find((row) => !row.candidateId || !row.semester || !row.code)
+    if (invalidRow) {
+      setSubmitError('Each back-paper row needs candidate ID, semester, and subject code.')
+      return
+    }
+
+    const header = {
+      faculty: normalize(form.faculty),
+      level: normalize(form.level),
+      discipline: normalize(form.discipline),
+      program: normalize(form.program),
+      college: normalize(form.college),
+    }
+
+    if (!header.faculty || !header.level || !header.discipline || !header.program || !header.college) {
+      setSubmitError('Select faculty, level, discipline, program, and college before saving back-paper rows.')
+      return
+    }
+
+    setSavingBackPapers(true)
+    try {
+      const response = await axios.post('/api/data/backpapers', {
+        ...header,
+        backPapers: payloadRows,
+      })
+
+      setSubmitSuccess(response.data?.message ?? 'Back-paper candidates saved successfully.')
+
+      const refresh = await axios.get('/api/data/backpapers', {
+        params: { program: header.program, college: header.college },
+      })
+      const rows = Array.isArray(refresh.data?.backPapers) ? refresh.data.backPapers : []
+      setBackPaperRows(rows.length
+        ? rows.map((row) => ({
+          id: createRowId(),
+          candidateId: row.candidateId ?? '',
+          semester: row.semester ?? '',
+          code: row.code ?? '',
+          name: row.name ?? '',
+        }))
+        : [createEmptyBackPaperRow()])
+    } catch (error) {
+      setSubmitError(error?.response?.data?.error ?? 'Could not save back-paper candidates.')
+    } finally {
+      setSavingBackPapers(false)
+    }
   }
 
   const handleSubmit = async (event) => {
@@ -478,10 +689,75 @@ export default function Registration() {
             {courseSuggestions.map((course) => <option key={course.code} value={course.code} />)}
           </datalist>
 
+          <div className="section-heading section-heading-spaced">
+            <div>
+              <p className="eyebrow">Back-Paper Candidates</p>
+              <h2>Back-Paper Subject Rows</h2>
+            </div>
+            <button type="button" onClick={addBackPaperRow}>Add Back-Paper Row</button>
+          </div>
+
+          {loadingBackPapers && <p className="muted-copy">Loading existing back-paper rows for this program and college...</p>}
+
+          <div className="course-grid">
+            <div className="course-grid-header">Candidate ID</div>
+            <div className="course-grid-header">Semester</div>
+            <div className="course-grid-header">Subject Code</div>
+            <div className="course-grid-header">Subject Name</div>
+            <div className="course-grid-header action-column">Action</div>
+
+            {backPaperRows.map((row) => (
+              <Fragment key={row.id}>
+                <div>
+                  <input
+                    value={row.candidateId}
+                    onChange={(event) => updateBackPaperRow(row.id, 'candidateId', event.target.value)}
+                    placeholder="BESE-001"
+                  />
+                </div>
+                <div>
+                  <input
+                    value={row.semester}
+                    onChange={(event) => updateBackPaperRow(row.id, 'semester', event.target.value)}
+                    placeholder="1 or I"
+                  />
+                </div>
+                <div>
+                  <input
+                    list="course-code-options"
+                    value={row.code}
+                    onChange={(event) => updateBackPaperRow(row.id, 'code', event.target.value)}
+                    placeholder="ENG-101.1"
+                  />
+                </div>
+                <div>
+                  <input
+                    value={row.name}
+                    onChange={(event) => updateBackPaperRow(row.id, 'name', event.target.value)}
+                    placeholder="Required for new code"
+                  />
+                </div>
+                <div className="action-column">
+                  <button
+                    type="button"
+                    className="button-ghost button-danger"
+                    onClick={() => removeBackPaperRow(row.id)}
+                    disabled={backPaperRows.length === 1}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </Fragment>
+            ))}
+          </div>
+
           {submitError && <p className="error">{submitError}</p>}
           {submitSuccess && <p className="success">{submitSuccess}</p>}
 
           <div className="form-actions">
+            <button type="button" onClick={handleSaveBackPapers} disabled={savingBackPapers || loadingBackPapers}>
+              {savingBackPapers ? 'Saving Back Papers...' : 'Save Back-Paper Subjects'}
+            </button>
             <button type="submit" disabled={submitting}>
               {submitting ? 'Saving Registration...' : 'Save Semester Registration'}
             </button>
@@ -504,6 +780,14 @@ export default function Registration() {
               <div>
                 <span>Existing colleges on program</span>
                 <strong>{collegeOptions.length}</strong>
+              </div>
+              <div>
+                <span>Back-paper candidates</span>
+                <strong>{backPaperCandidateCount}</strong>
+              </div>
+              <div>
+                <span>Back-paper subjects</span>
+                <strong>{backPaperSubjectCount}</strong>
               </div>
             </div>
           </div>

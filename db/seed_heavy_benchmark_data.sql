@@ -27,6 +27,9 @@ DELETE FROM course
 WHERE Faculty IN ('BENCHMARK', 'BENCH_HEAVY', 'MANAGEMENT', 'SCIENCE AND TECHNOLOGY')
    OR CourseCode REGEXP '^[A-Z]{3,5}[0-9]{3}-[0-9]{2}$';
 
+DELETE FROM backpapercandidate
+WHERE ID LIKE 'BK-%';
+
 -- Keep only supported canonical group combinations in examdivision
 DELETE FROM examdivision
 WHERE NOT (
@@ -334,6 +337,175 @@ SELECT CONCAT('JUR-', LPAD(500 + MOD((i.i - 1) * 8 + s.s, 700), 3, '0'), '.', MO
        c.college_name,
        CAST(25 + ((i.i * 8 + s.s * 3) % 70) AS CHAR)
 FROM tmp_idx i CROSS JOIN tmp_slot s JOIN tmp_college c ON c.k = MOD(i.i+6,8)+1;
+
+-- --------------------------------------------------
+-- Back paper candidates (high complexity load)
+-- Pattern: each synthetic candidate carries 6-8 failed papers with
+-- shared hotspot subjects so the conflict graph is much denser.
+-- --------------------------------------------------
+
+-- Engineering backlog candidates (AI and DATA tracks)
+-- Core shared failures (all candidates): high overlap on even semesters.
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('ENG-', LPAD(100 + MOD((i.i - 1) * 8 + s.s, 900), 3, '0'), '.', MOD(i.i + s.s, 9) + 1),
+       CONCAT('BK-AI-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BE-AI-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i,8)+1
+WHERE s.s IN (2,4,6,8);
+
+-- Additional hotspot failures (half cohort): shared cores + odd semesters.
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('ENG-', LPAD(100 + MOD((MOD(i.i,5) + 1 - 1) * 8 + s.s, 900), 3, '0'), '.', MOD(MOD(i.i,5) + s.s, 9) + 1),
+       CONCAT('BK-AI-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BE-AI-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i,8)+1
+WHERE MOD(i.i,2)=0
+  AND s.s IN (1,3,5,7);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('ENG-', LPAD(100 + MOD((i.i - 1) * 8 + s.s, 900), 3, '0'), '.', MOD(i.i + s.s, 9) + 1),
+       CONCAT('BK-DATA-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BE-DATA-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+1,8)+1
+WHERE s.s IN (1,3,5,7);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('ENG-', LPAD(100 + MOD((MOD(i.i,5) + 1 - 1) * 8 + s.s, 900), 3, '0'), '.', MOD(MOD(i.i,5) + s.s, 9) + 1),
+       CONCAT('BK-DATA-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BE-DATA-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+1,8)+1
+WHERE MOD(i.i,2)=1
+  AND s.s IN (2,4,6,8);
+
+-- Biomedical backlog candidates
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('BIM-', LPAD(200 + MOD((i.i - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(i.i + s.s + 1, 9) + 1),
+       CONCAT('BK-PHARM-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BPHARM-ADV-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+2,8)+1
+WHERE s.s IN (3,4,7,8);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('BIM-', LPAD(200 + MOD((MOD(i.i,6) + 1 - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(MOD(i.i,6) + s.s + 1, 9) + 1),
+       CONCAT('BK-PHARM-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BPHARM-ADV-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+2,8)+1
+WHERE MOD(i.i,3)<>0
+  AND s.s IN (1,2,5,6);
+
+-- MBA backlog candidates (general and finance)
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('MGT-', LPAD(300 + MOD((i.i - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(i.i + s.s + 2, 9) + 1),
+       CONCAT('BK-MBA-GEN-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('MBA-GEN-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+3,8)+1
+WHERE s.s IN (2,3,6,8);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('MGT-', LPAD(300 + MOD((MOD(i.i,4) + 1 - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(MOD(i.i,4) + s.s + 2, 9) + 1),
+       CONCAT('BK-MBA-GEN-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('MBA-GEN-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+3,8)+1
+WHERE s.s IN (1,4,5,7);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('MGT-', LPAD(300 + MOD((i.i - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(i.i + s.s + 2, 9) + 1),
+       CONCAT('BK-MBA-FIN-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('MBA-FIN-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+4,8)+1
+WHERE s.s IN (1,4,5,7);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('MGT-', LPAD(300 + MOD((MOD(i.i,4) + 1 - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(MOD(i.i,4) + s.s + 2, 9) + 1),
+       CONCAT('BK-MBA-FIN-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('MBA-FIN-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+4,8)+1
+WHERE s.s IN (2,3,6,8);
+
+-- Law backlog candidates (BL and ML)
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('LAW-', LPAD(400 + MOD((i.i - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(i.i + s.s + 3, 9) + 1),
+       CONCAT('BK-BL-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BL-HON-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+5,8)+1
+WHERE s.s IN (2,4,6,8);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('LAW-', LPAD(400 + MOD((MOD(i.i,4) + 1 - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(MOD(i.i,4) + s.s + 3, 9) + 1),
+       CONCAT('BK-BL-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('BL-HON-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+5,8)+1
+WHERE s.s IN (1,3,5,7);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('JUR-', LPAD(500 + MOD((i.i - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(i.i + s.s + 4, 9) + 1),
+       CONCAT('BK-ML-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('ML-RES-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+6,8)+1
+WHERE s.s IN (1,3,5,7);
+
+INSERT IGNORE INTO backpapercandidate (CourseCode, ID, College, Course, Semester)
+SELECT CONCAT('JUR-', LPAD(500 + MOD((MOD(i.i,4) + 1 - 1) * 8 + s.s, 700), 3, '0'), '.', MOD(MOD(i.i,4) + s.s + 4, 9) + 1),
+       CONCAT('BK-ML-', LPAD(i.i,2,'0')),
+       c.college_name,
+       CONCAT('ML-RES-', LPAD(i.i,2,'0')),
+       ((s.s - 1) % 8) + 1
+FROM tmp_idx i
+CROSS JOIN tmp_slot s
+JOIN tmp_college c ON c.k = MOD(i.i+6,8)+1
+WHERE s.s IN (2,4,6,8);
 
 DROP TEMPORARY TABLE tmp_college;
 DROP TEMPORARY TABLE tmp_slot;

@@ -68,11 +68,44 @@ public class ScheduleController {
         List<CalendarDayDto> calendarDays = buildCalendar(result.getExamCalander());
         List<GroupRoutineDto> groupRoutines = buildGroupRoutines(result.getGroupRoutine());
 
+        int unscheduledGroupCount = unscheduledGroups.size();
+        int totalGroupCount = groupRoutineCount + unscheduledGroupCount;
+
+        if (groupRoutineCount == 0 && unscheduledGroupCount > 0) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                "success", false,
+                "scheduleStatus", "NO_FEASIBLE_SCHEDULE",
+                "message", "No feasible schedule could be created for any group with the current constraints/data.",
+                "groupRoutineCount", groupRoutineCount,
+                "unscheduledGroupCount", unscheduledGroupCount,
+                "totalGroupCount", totalGroupCount,
+                "unscheduledGroups", unscheduledGroups,
+                "calendarDays", calendarDays,
+                "groupRoutines", groupRoutines
+            ));
+        }
+
+        if (unscheduledGroupCount > 0) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "scheduleStatus", "PARTIAL",
+                "message", "Schedule generated partially. Some groups could not be scheduled.",
+                "groupRoutineCount", groupRoutineCount,
+                "unscheduledGroupCount", unscheduledGroupCount,
+                "totalGroupCount", totalGroupCount,
+                "unscheduledGroups", unscheduledGroups,
+                "calendarDays", calendarDays,
+                "groupRoutines", groupRoutines
+            ));
+        }
+
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Schedule generated successfully.",
+            "scheduleStatus", "COMPLETE",
+            "message", "Schedule generated successfully.",
                 "groupRoutineCount", groupRoutineCount,
-                "unscheduledGroupCount", unscheduledGroups.size(),
+            "unscheduledGroupCount", unscheduledGroupCount,
+            "totalGroupCount", totalGroupCount,
                 "unscheduledGroups", unscheduledGroups,
                 "calendarDays", calendarDays,
                 "groupRoutines", groupRoutines
